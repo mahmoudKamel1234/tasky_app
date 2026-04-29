@@ -1,187 +1,127 @@
-import 'dart:math';
-
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:tasky_app/auth/dailog_app.dart';
-import 'package:tasky_app/auth/state_user_auth.dart';
-import 'package:tasky_app/screan/matreal_buttom.dart';
+import 'package:tasky_app/auth/error_loding.dart';
+import 'package:tasky_app/auth/gesture_botton.dart';
+import 'package:tasky_app/data/auth_firebase.dart';
+import 'package:tasky_app/data/result_firebase.dart';
+import 'package:tasky_app/data/valedator_app.dart';
+import 'package:tasky_app/model/app_user.dart';
+import 'package:tasky_app/screan/login_app.dart';
 import 'package:tasky_app/screan/text_form_field_widget.dart';
 
-class RegisterApp extends StatelessWidget {
-  RegisterApp({super.key});
-  static const String routeName = "RegisterApp";
-  var email = TextEditingController();
+class RegstireScreen extends StatefulWidget {
+  RegstireScreen({super.key});
+  static const String routeName = "RegstireScreen";
+  @override
+  State<RegstireScreen> createState() => _RegstireScreen();
+}
 
-  var password = TextEditingController();
-
-  var phone = TextEditingController();
-
-  var fullName = TextEditingController();
+class _RegstireScreen extends State<RegstireScreen> {
+  TextEditingController email = new TextEditingController();
+  TextEditingController password = new TextEditingController();
+  TextEditingController confirmPassword = new TextEditingController();
+  TextEditingController name = new TextEditingController();
   var formKey = GlobalKey<FormState>();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xffffffff),
-
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Form(
-            key: formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 100),
-                Text(
-                  "Register",
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xff252525),
-                  ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: .start,
+            children: [
+              SizedBox(height: 100),
+              Text(
+                "Register",
+                style: TextStyle(fontSize: 32, fontWeight: .bold),
+              ),
+              SizedBox(height: 60),
+              TextFormFiledWidget(
+                obscureText: false,
+                validator: ValidatorApp.validateName,
+                controller: name,
+                hintText: "Please enter your name",
+              ),
+              SizedBox(height: 35),
+              TextFormFiledWidget(
+                obscureText: false,
+                validator: ValidatorApp.validateEmail,
+                controller: email,
+                hintText: "please enter your email",
+              ),
+              SizedBox(height: 35),
+              TextFormFiledWidget(
+                obscureText: true,
+                validator: ValidatorApp.validatePassword,
+                controller: password,
+                hintText: "please enter your password",
+              ),
+              SizedBox(height: 35),
+              TextFormFiledWidget(
+                obscureText: true,
+                validator: (value) =>
+                    ValidatorApp.validateConfirmPassword(value, password.text),
+                controller: confirmPassword,
+                hintText: "Confirm Password",
+              ),
+              SizedBox(height: 60),
+              GestureButton(
+                text: "Regstier",
+                onTap: () async {
+                  if (formKey.currentState!.validate()) {
+                    var user = AppUser(
+                      name: name.text,
+                      email: email.text,
+                      password: password.text,
+                    );
+                    await regstier(context: context, user: user);
+                  } else {
+                    print("null");
+                  }
+                },
+              ),
+              SizedBox(height: 20),
+              Text.rich(
+                TextSpan(
+                  text: "have an account?",
+                  children: [
+                    TextSpan(
+                      text: "Login",
+                      style: TextStyle(color: Color(0xff5F33E1)),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.of(
+                            context,
+                          ).pushNamed(LoginScreen.routeName);
+                        },
+                    ),
+                  ],
                 ),
-                Text(
-                  "by creating a free account.",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w300,
-                    color: Color(0xff252525),
-                  ),
-                  textAlign: .center,
-                ),
-                SizedBox(height: 44),
-                Text(
-                  "Full Name",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xff252525),
-                  ),
-                ),
-                SizedBox(height: 5),
-                TextFormFieldWidget(
-                  controller: fullName,
-                  hintText: "Enter your full name",
-                  validator: (text) {
-                    if (text == null || text.isEmpty) {
-                      return 'Please enter your full name';
-                    }
-                    return null;
-                  },
-                ),
-                Text(
-                  "Email",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xff252525),
-                  ),
-                ),
-                SizedBox(height: 5),
-                TextFormFieldWidget(
-                  controller: email,
-                  hintText: "Enter your email",
-                  validator: (text) {
-                    if (text == null || text.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    return null;
-                  },
-                ),
-                Text(
-                  "Phone",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xff252525),
-                  ),
-                ),
-                SizedBox(height: 5),
-                TextFormFieldWidget(
-                  controller: phone,
-                  hintText: "Enter your phone",
-                  validator: (text) {
-                    if (text == null || text.isEmpty) {
-                      return 'Please enter your phone';
-                    }
-                    return null;
-                  },
-                ),
-                Text(
-                  "Password",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xff252525),
-                  ),
-                ),
-                SizedBox(height: 5),
-
-                TextFormFieldWidget(
-                  controller: password,
-                  hintText: "Enter your password",
-                  validator: (text) {
-                    if (text == null || text.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: .min,
-          children: [
-            MatrealButtomApp(
-              onPressed: () {
-                if(formKey.currentState!.validate()){
-                  register( email: email.text, password: password.text, context: context);
-                }
-                // showLoadingUi(context);
-                // showErrorUI(context: context, error: "This is error ");
-              },
-              lable: 'Register',
-            ),
-            StateUserAuth(
-              onTap: () {
-                Navigator.of(context).pop();
-              },
-              title: 'Already a member?',
-              subTitle: 'Login in',
-            ),
-            SizedBox(height: 10),
-          ],
         ),
       ),
     );
   }
 
-  void register({
-    required String email,
-    required String password,
+  Future<void> regstier({
     required BuildContext context,
+    required AppUser user,
   }) async {
-    DialogApp.showLoadingUi(context);
-    try {
-      final credential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: password);
-      Navigator.of(context).pop();
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        DialogApp.showErrorUI(context: context, error: 'The password provided is too weak.');
-      } else if (e.code == 'email-already-in-use') {
-        DialogApp.showErrorUI(context: context, error: 'The account already exists for that email.');
-      }
-    } catch (e) {
-     DialogApp.showErrorUI(context: context, error: 'An error occurred. Please try again.');
+    showLoadingUi(context);
+    final result = await AuthFireBase.regstier(user);
+    Navigator.of(context).pop();
+    switch (result) {
+      case Succes<AppUser>():
+        Navigator.of(context).pop();
+
+      case Erorr<AppUser>():
+        showErorrLoading(context: context, erorr: result.erorr);
     }
   }
-
-
+  
+  void showLoadingUi(BuildContext context) {}
 }

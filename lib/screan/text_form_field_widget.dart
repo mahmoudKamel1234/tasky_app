@@ -1,46 +1,40 @@
 import 'package:flutter/material.dart';
 
-class TextFormFieldWidget extends StatelessWidget {
-   TextFormFieldWidget({
+
+class TextFormFiledWidget extends StatelessWidget {
+  TextFormFiledWidget({
     super.key,
-    this.controller,
-    this.hintText,
-    this.hintStyle,
+    required this.controller,
+    required this.hintText,
+    required this.obscureText,
     this.validator,
   });
-   TextEditingController? controller;
-   String? hintText;
-   TextStyle? hintStyle;
-   String? Function(String?)? validator;
+  String? hintText;
+  late bool obscureText;
+  String? Function(String?)? validator;
+  TextEditingController? controller;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      controller: controller,
+      obscureText: obscureText,
       validator: validator,
+      controller: controller,
       decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
         hintText: hintText,
-        hintStyle:
-            hintStyle ??
-            const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: Color(0xff808080),
-            ),
-        fillColor: const Color(0xfff9e9e9),
+        hintStyle: TextStyle(fontSize: 14),
         filled: true,
-        focusedBorder: _outlineInputBorder(const Color(0xffff3951)),
-        enabledBorder: _outlineInputBorder(Colors.transparent),
+        fillColor: Color(0xffEAEAEA),
+        enabledBorder: _outlineInputBorder(),
+        focusedBorder: _outlineInputBorder(),
       ),
     );
   }
 
-  OutlineInputBorder _outlineInputBorder(Color color) {
+  OutlineInputBorder _outlineInputBorder() {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: color),
-      
+      borderSide: BorderSide(color: Colors.transparent),
     );
   }
 }

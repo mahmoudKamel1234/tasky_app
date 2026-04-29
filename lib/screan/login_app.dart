@@ -1,146 +1,114 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:tasky_app/auth/dailog_app.dart';
-import 'package:tasky_app/auth/state_user_auth.dart';
-import 'package:tasky_app/screan/matreal_buttom.dart';
+import 'package:tasky_app/auth/error_loding.dart';
+import 'package:tasky_app/auth/gesture_botton.dart';
+import 'package:tasky_app/auth/loding.dart';
+import 'package:tasky_app/data/auth_firebase.dart';
+import 'package:tasky_app/data/result_firebase.dart';
+import 'package:tasky_app/data/valedator_app.dart';
+import 'package:tasky_app/model/app_user.dart';
+import 'package:tasky_app/screan/empty_screan.dart';
 import 'package:tasky_app/screan/register_app.dart';
 import 'package:tasky_app/screan/text_form_field_widget.dart';
 
-class LoginApp extends StatelessWidget {
-  LoginApp({super.key});
-static const String routeName = "LoginApp";
-  var email = TextEditingController();
 
-  var password = TextEditingController();
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+  static const String routeName = "LoginScreen";
 
-   var formKey = GlobalKey<FormState>();
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  TextEditingController email = new TextEditingController();
+  TextEditingController password = new TextEditingController();
+  var formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xffffffff),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: .start,
+            children: [
+              SizedBox(height: 100),
+              Text("Login", style: TextStyle(fontSize: 32, fontWeight: .bold)),
+              SizedBox(height: 60),
 
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Form(
-            key: formKey,
-            child: Column(
-             crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                
-                SizedBox(height: 80),
-                Text(
-                  " login",
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xff252525),
-                  ),
+              TextFormFiledWidget(
+                obscureText: false,
+                validator: ValidatorApp.validateEmail,
+                controller: email,
+                hintText: "please enter your email",
+              ),
+              SizedBox(height: 50),
+              TextFormFiledWidget(
+                obscureText: true,
+                validator: ValidatorApp.validatePassword,
+                controller: password,
+                hintText: "please enter your password",
+              ),
+
+              SizedBox(height: 60),
+              GestureButton(
+                text: "Next",
+                onTap: () async {
+                  if (formKey.currentState!.validate()) {
+                    var user = AppUser(
+                      email: email.text,
+                      password: password.text,
+                    );
+                    await login(context: context, user: user);
+                  }
+                },
+              ),
+              SizedBox(height: 20),
+
+              Text.rich(
+                TextSpan(
+                  text: "Not have an account?",
+                  children: [
+                    TextSpan(
+                      text: "Regstier",
+                      style: TextStyle(color: Color(0xff5F33E1)),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.of(
+                            context,
+                          ).pushNamed(RegstireScreen.routeName);
+                        },
+                    ),
+                  ],
                 ),
-                Text(
-                  "sign in to access your account",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w300,
-                    color: Color(0xff252525),
-                  ),
-                  textAlign: .center,
-                ),
-                SizedBox(height: 100),
-            
-            Text("Email",
-            style: TextStyle(fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xff252525)),),
-                SizedBox(height: 5),
-                TextFormFieldWidget(
-                  controller: email,
-                  hintText: "Enter your email",
-                  validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      return null;
-                    },
-                ),
-                SizedBox(height: 30),
-            
-            Text("Password",
-            style: TextStyle(fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xff252525)),),
-                SizedBox(height: 5),
-                TextFormFieldWidget(
-                  controller: password,
-                  hintText: "Enter your password",
-                 validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    return null;
-                  },
-                ),
-               
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: .min,
-          children: [
-            MatrealButtomApp(
-              onPressed: () {
-                if(formKey.currentState!.validate()){
-                  login(
-                    email: email.text,
-                    password: password.text,
-                    context: context,
-                  );
-                }
-              },
-              lable: 'LOGIN',
-            ),
-            StateUserAuth(
-              onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (context) => RegisterApp()));
-              },
-              title: 'New member ?',
-              subTitle: 'Register now',
-            ),
-            SizedBox(height: 10),
-          ],
         ),
       ),
     );
   }
-  void login({
-    required String email,
-    required String password,
+
+  Future<void> login({
     required BuildContext context,
+    required AppUser user,
   }) async {
-    DialogApp.showLoadingUi(context);
-    try {
-      final credential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
-      Navigator.of(context).pop();
-    } on FirebaseAuthException catch (e) {
-      Navigator.of(context).pop();
-      if (e.code == 'user-not-found') {
-        DialogApp.showErrorUI(context: context, error: 'No user found for that email.');
-      } else if (e.code == 'wrong-password') {
-        DialogApp.showErrorUI(context: context, error: 'Wrong password provided for that user.');
-      }
-     else {
-        DialogApp.showErrorUI(context: context, error: 'An error occurred. Please try again.');
-      }
-    } catch (e) {
-      DialogApp.showErrorUI(context: context, error: 'An error occurred. Please try again.');
+    showLoadingUi(context);
+    final result = await AuthFireBase.login(
+      email: user.email!,
+      password: user.password!,
+      user: user,
+    );
+    Navigator.of(context).pop();
+
+    switch (result) {
+      case Succes<bool>():
+        Navigator.of(context).pushNamed(EmptyScreen.routeName);
+      case Erorr<bool>():
+        showErorrLoading(context: context, erorr: result.erorr);
     }
   }
 }
